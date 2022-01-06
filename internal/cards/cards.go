@@ -1,4 +1,4 @@
-package card
+package cards
 
 import (
 	"github.com/stripe/stripe-go/v72"
@@ -21,12 +21,12 @@ type Transaction struct {
 	BankReturnCode      string
 }
 
-// Charge a credit card
+// Charge a credit cards
 func (c *Card) Charge(currency string, amount int) (*stripe.PaymentIntent, string, error) {
 	return c.CreatePaymentIntent(currency, amount)
 }
 
-// CreatePaymentIntent process a credit card charge
+// CreatePaymentIntent process a credit cards charge
 func (c *Card) CreatePaymentIntent(currency string, amount int) (*stripe.PaymentIntent, string, error) {
 	stripe.Key = c.Secret
 
@@ -52,11 +52,23 @@ func cardErrorMessage(code stripe.ErrorCode) string {
 	var msg = ""
 	switch code {
 	case stripe.ErrorCodeCardDeclined:
-		msg = "Your card was decline"
+		msg = "Your cards was decline"
 	case stripe.ErrorCodeExpiredCard:
-		msg = "Your card is expired"
+		msg = "Your cards is expired"
+	case stripe.ErrorCodeIncorrectCVC:
+		msg = "Incorrect CVC code"
+	case stripe.ErrorCodeIncorrectZip:
+		msg = "Incorrect zip/postal code"
+	case stripe.ErrorCodeAmountTooLarge:
+		msg = "The amount is too large to charge to your cards"
+	case stripe.ErrorCodeAmountTooSmall:
+		msg = "The amount is too small to charge to your cards"
+	case stripe.ErrorCodeBalanceInsufficient:
+		msg = "Insufficient balance"
+	case stripe.ErrorCodePostalCodeInvalid:
+		msg = "Your postal code is invalid"
 	default:
-		msg = "error in card"
+		msg = "error in cards"
 	}
 	return msg
 }
