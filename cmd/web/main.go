@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/driver"
+	"github.com/ahmedkhaeld/ecommerce/internal/models"
 	"html/template"
 	"log"
 	"net/http"
@@ -33,6 +34,7 @@ type application struct {
 	errorLog      *log.Logger
 	templateCache map[string]*template.Template
 	version       string
+	DB            models.DBModel
 }
 
 func (app *application) serve() error {
@@ -81,6 +83,7 @@ func main() {
 		errorLog:      errorLog,
 		templateCache: tc,
 		version:       version,
+		DB:            models.DBModel{DB: conn},
 	}
 
 	err = app.serve()
