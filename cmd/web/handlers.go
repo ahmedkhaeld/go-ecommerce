@@ -13,6 +13,12 @@ func (app *application) VirtualTerminal(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+func (app *application) Home(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "home", nil); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
 // PaymentSucceeded read submitted fields, write it to map, render map fields to receipt template
 func (app *application) PaymentSucceeded(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
@@ -50,6 +56,12 @@ func (app *application) PaymentSucceeded(w http.ResponseWriter, r *http.Request)
 	expiryMonth := pm.Card.ExpMonth
 	expiryYear := pm.Card.ExpYear
 
+	// create a new customer
+
+	// create a new order
+
+	// create n ew txn
+
 	// write the data into a map
 	data := make(map[string]interface{})
 	data["cardholder"] = cardHolder
@@ -62,6 +74,8 @@ func (app *application) PaymentSucceeded(w http.ResponseWriter, r *http.Request)
 	data["expiry_month"] = expiryMonth
 	data["expiry_year"] = expiryYear
 	data["bank_return_code"] = pi.Charges.Data[0].ID
+
+	// write the data to session, and then redirect user to new page
 
 	// render a template displaying the receipt
 	if err := app.renderTemplate(w, r, "succeeded", &templateData{

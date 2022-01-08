@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/driver"
 	"github.com/ahmedkhaeld/ecommerce/internal/models"
+	"github.com/alexedwards/scs/v2"
 	"html/template"
 	"log"
 	"net/http"
@@ -14,6 +15,8 @@ import (
 
 const version = "1.0.0"
 const cssVersion = "1"
+
+var session *scs.SessionManager
 
 type config struct {
 	port int
@@ -35,6 +38,7 @@ type application struct {
 	templateCache map[string]*template.Template
 	version       string
 	DB            models.DBModel
+	Session       *scs.SessionManager
 }
 
 func (app *application) serve() error {
@@ -75,6 +79,10 @@ func main() {
 	}
 	defer conn.Close()
 
+	// 1. set up session
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+
 	tc := make(map[string]*template.Template)
 
 	app := &application{
@@ -84,6 +92,7 @@ func main() {
 		templateCache: tc,
 		version:       version,
 		DB:            models.DBModel{DB: conn},
+		Session:       session,
 	}
 
 	err = app.serve()
