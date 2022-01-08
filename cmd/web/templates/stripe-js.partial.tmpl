@@ -11,7 +11,7 @@
         const processing = document.getElementById("processing-payment");
 
         //initialize stripe var with the publishable key
-        stripe = Stripe('pk_test_51KEMntAWI93n8USP6zi9Xujxk0g78CsLqItfX610srsJtSOqdYh8UIkZMyWDzqyT4LUo1HmgfKyujdwdtYQ2KtJi00cqp4e0MI')
+        stripe = Stripe('{{.StripePublishableKey}}')
 
         // hidePayButton prevent use to click on pay twice
         function hidePayButton(){
@@ -65,7 +65,7 @@
                 body: JSON.stringify(payload),
             }
             // get the response as text, then parse to json, for card payment confirmation charge
-            fetch("http://localhost:4001/api/payment-intent", requestOptions)
+            fetch("{{.API}}/api/payment-intent", requestOptions)
                 .then(response=>response.text())
                 .then(response=>{
                     let data;
