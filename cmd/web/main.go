@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/driver"
@@ -58,6 +59,9 @@ func (app *application) serve() error {
 }
 
 func main() {
+
+	gob.Register(map[string]interface{}{})
+
 	var cfg config
 
 	flag.IntVar(&cfg.port, "port", 4000, "Server port to listen on")

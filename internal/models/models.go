@@ -151,9 +151,10 @@ func (m *DBModel) InsertTransaction(txn Transaction) (int, error) {
 
 	stmt := `
 		insert into transactions
-			(amount, currency, last_four, bank_return_code,
+			(amount, currency, last_four, bank_return_code, expiry_month, expiry_year,
+			 payment_intent, payment_method,
 			transaction_status_id, created_at, updated_at)
-		values (?, ?, ?, ?, ?, ?, ?)
+		values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := m.DB.ExecContext(ctx, stmt,
@@ -161,6 +162,10 @@ func (m *DBModel) InsertTransaction(txn Transaction) (int, error) {
 		txn.Currency,
 		txn.LastFour,
 		txn.BankReturnCode,
+		txn.ExpiryMonth,
+		txn.ExpiryYear,
+		txn.PaymentIntent,
+		txn.PaymentMethod,
 		txn.TransactionStatusID,
 		time.Now(),
 		time.Now(),
@@ -177,21 +182,24 @@ func (m *DBModel) InsertTransaction(txn Transaction) (int, error) {
 
 }
 
+// InsertOrder inserts a new order, and returns its id
 func (m *DBModel) InsertOrder(order Order) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	cancel()
+	defer cancel()
 
 	stmt := `
 		insert into orders
-			(widget_id, transaction_id, status_id, quantity, 
+			(widget_id, transaction_id, status_id, quantity, customer_id,
 			amount, created_at, updated_at)
-		values (?, ?, ?, ?, ?, ?, ?)
+		values (?, ?, ?, ?, ?, ?, ?, ?)
 	`
+
 	result, err := m.DB.ExecContext(ctx, stmt,
 		order.WidgetID,
 		order.TransactionID,
 		order.StatusID,
 		order.Quantity,
+		order.CustomerID,
 		order.Amount,
 		time.Now(),
 		time.Now(),
@@ -206,5 +214,33 @@ func (m *DBModel) InsertOrder(order Order) (int, error) {
 	}
 
 	return int(id), nil
+}
 
+// InsertCustomer inserts a new customer, and return its id
+func (m *DBModel) InsertCustomer(c Customer) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `
+		insert into customers
+			(first_name, last_name, email, created_at, updated_at)
+		values (?, ?, ?, ?, ?)`
+
+	result, err := m.DB.ExecContext(ctx, stmt,
+		c.FirstName,
+		c.LastName,
+		c.Email,
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
 }
