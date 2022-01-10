@@ -73,3 +73,134 @@
     </form>
 
 {{end}}
+
+{{define "js"}}
+    {{$widget := index .Data "widget"}}
+
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <script>
+        let card;
+        let stripe;
+        const cardMessages =document.getElementById("card-messages");
+        const payButton = document.getElementById("pay-button");
+        const processing = document.getElementById("processing-payment");
+
+        //initialize stripe var with the publishable key
+        stripe = Stripe('{{.StripePublishableKey}}')
+
+        // hidePayButton prevent use to click on pay twice
+        function hidePayButton(){
+            payButton.classList.add("d-none");
+            processing.classList.remove("d-none");
+        }
+
+        function showPayButtons(){
+            payButton.classList.remove("d-none");
+            processing.classList.add("d-none");
+        }
+
+        function showCardError(msg){
+            cardMessages.classList.add("alert-danger");
+            cardMessages.classList.remove("alert-success");
+            cardMessages.classList.remove("d-none");
+            cardMessages.innerText = msg;
+        }
+
+        function  showCardSuccess(){
+            cardMessages.classList.remove("alert-danger");
+            cardMessages.classList.add("alert-success");
+            cardMessages.classList.remove("d-none");
+            cardMessages.innerText = "Transaction successful";
+        }
+
+        function val() {
+            let form = document.getElementById("charge_form");
+            if (form.checkValidity()=== false){
+                this.event.preventDefault();
+                this.event.stopPropagation();
+                form.classList.add("was-validated");
+                return;
+            }
+            form.classList.add("was-validated");
+            hidePayButton();
+
+            let amountToCharge = document.getElementById("amount").value;
+
+            // after we had the amount to charge, call the stripe create payment method
+            stripe.createPaymentMethod({
+                type: 'card',
+                card: card,
+                billing_details: {
+                  email: document.getElementById("cardholder-email").value,
+                },
+            }).then(stripePaymentMethodHandler);
+        }
+
+        // take the result of the payment method, if no error, then create customer with a plan
+        function stripePaymentMethodHandler(result){
+            if (result.error) {
+                showCardError(result.error.message);
+            }else {
+                // create a customer and subscribe to plan
+                let payload = {
+                    plan: '{{$widget.PlanID}}',
+                    payment_method: result.paymentMethod.id,
+                    email: document.getElementById("cardholder-email").value,
+                    last_four: result.paymentMethod.card.last4,
+                }
+                const requestOptions = {
+                    method : 'post',
+                    headers: {
+                        'Accept' : 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                }
+                fetch("{{.API}}/api/customer-subscription-plan", requestOptions)
+                .then(response =>response.json())
+                .then(function (data){
+                    console.log(data);
+                    processing.classList.add("d-none");
+                    // set hidden vars
+
+                    // submit the form
+                })
+            }
+        }
+
+
+
+        // this anonymous function initiates and display the credit card field
+        (function (){
+            //create stripe & elements
+            const elements = stripe.elements();
+            const style = {
+                base: {
+                    fontSize: '16px',
+                    lineHeight: '24px',
+                }
+            };
+            // create card entry
+            card = elements.create('card', {
+                style: style,
+                hidePostalCode: true,
+            });
+            card.mount("#card-element");
+
+            //check for input errors
+            card.addEventListener('change', function (event){
+                var displayError = document.getElementById("card-errors");
+                if(event.error) {
+                    displayError.classList.remove('d-none');
+                    displayError.textContent = event.error.message;
+                }else{
+                    displayError.classList.add('d-none');
+                    displayError.textContent = '';
+                }
+            })
+
+        })();
+    </script>
+
+{{end}}
