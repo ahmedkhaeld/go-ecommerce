@@ -18,7 +18,7 @@
           class="d-block needs-validation charge-form"
           autocomplete="off" novalidate="">
 
-        <input type="hidden" name="product_id" value="{{$widget.ID}}">
+        <input type="hidden" name="product_id" id="product_id" value="{{$widget.ID}}">
         <input type="hidden" name="amount" id="amount" value="{{$widget.Price}}">
         <h3 class ="mt-2 text-center mb-3"> {{formatCurrency $widget.Price}}/month</h3>
         <p>{{$widget.Description}}</p>
@@ -89,7 +89,7 @@
         //initialize stripe var with the publishable key
         stripe = Stripe('{{.StripePublishableKey}}')
 
-        // hidePayButton prevent use to click on pay twice
+        // hidePayButton prevent user to click on pay twice
         function hidePayButton(){
             payButton.classList.add("d-none");
             processing.classList.remove("d-none");
@@ -144,10 +144,19 @@
             }else {
                 // create a customer and subscribe to plan
                 let payload = {
+                    product_id: document.getElementById("product_id").value,
                     plan: '{{$widget.PlanID}}',
                     payment_method: result.paymentMethod.id,
                     email: document.getElementById("cardholder-email").value,
-                    last_four: result.paymentMethod.card.last4,
+                    last_four: result.paymentMethod.card.last_four,
+                    card_brand: result.paymentMethod.card.card_brand,
+                    exp_month: result.paymentMethod.card.exp_month,
+                    exp_year: result.paymentMethod.card.exp_year,
+                    first_name: document.getElementById("first-name").value,
+                    last_name: document.getElementById("last-name").value,
+                    amount: document.getElementById("amount").value,
+
+
                 }
                 const requestOptions = {
                     method : 'post',
@@ -162,9 +171,16 @@
                 .then(function (data){
                     console.log(data);
                     processing.classList.add("d-none");
-                    // set hidden vars
+                    showCardSuccess();
+                    // store the information in the session storage
+                    sessionStorage.first_name = document.getElementById("first-name").value;
+                    sessionStorage.last_name = document.getElementById("last-name").value;
+                    sessionStorage.amount = "{{formatCurrency $widget.Price}}";
+                    sessionStorage.last_four = result.paymentMethod.card.last4;
 
-                    // submit the form
+                    // redirect to bronze receipt page
+                    location.href = "/receipt/bronze";
+
                 })
             }
         }
