@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/cards"
 	"github.com/ahmedkhaeld/ecommerce/internal/models"
 	"github.com/go-chi/chi/v5"
@@ -254,14 +255,43 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 		app.badRequest(w, r, err)
 		return
 	}
+	// get the user from the database by email; send error if invalid email(invalid credentials)
+	user, err := app.DB.GetUserByEmail(userInput.Email)
+	if err != nil {
+		app.invalidCredentials(w)
+		return
+	}
+
+	// validate the password; send error if invalid password (compare what user enters against the hash stored in the db)
+	validPassword, err := app.passwordMatches(user.Password, userInput.Password)
+	if err != nil {
+		app.invalidCredentials(w)
+		return
+	}
+
+	if !validPassword {
+		app.invalidCredentials(w)
+		return
+	}
+
+	// generate the token to be sent back as part of the response
+	token, err := models.GenerateToken(user.ID, 24*time.Hour, models.ScopeAuthentication)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	// send response
 
 	var payload struct {
-		Error   bool   `json:"error"`
-		Message string `json:"message"`
+		Error   bool          `json:"error"`
+		Message string        `json:"message"`
+		Token   *models.Token `json:"authentication_token"`
 	}
 
 	payload.Error = false
-	payload.Message = "success!"
+	payload.Message = fmt.Sprintf("token for %s created", userInput.Email)
+	payload.Token = token
 
 	_ = app.writeJSON(w, http.StatusOK, payload)
 
