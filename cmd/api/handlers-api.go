@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/cards"
 	"github.com/ahmedkhaeld/ecommerce/internal/models"
@@ -9,6 +10,7 @@ import (
 	"github.com/stripe/stripe-go/v72"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -301,4 +303,50 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 
 	_ = app.writeJSON(w, http.StatusOK, payload)
 
+}
+
+// CheckAuthentication
+func (app *application) CheckAuthentication(w http.ResponseWriter, r *http.Request) {
+	// validate the token, and get associated user
+	user, err := app.authenticateToken(r)
+	if err != nil {
+		app.invalidCredentials(w)
+		return
+	}
+
+	// valid user
+	var payload struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+	payload.Error = false
+	payload.Message = fmt.Sprintf("authenticated use %s ", user.Email)
+	app.writeJSON(w, http.StatusOK, payload)
+}
+
+// authenticateToken get the header Authorization
+func (app *application) authenticateToken(r *http.Request) (*models.User, error) {
+	// extract the token from authorization header
+	authorizationHeader := r.Header.Get("Authorization")
+	if authorizationHeader == "" {
+		return nil, errors.New("no authorization header received")
+	}
+
+	headerParts := strings.Split(authorizationHeader, " ")
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		return nil, errors.New("no authorization received")
+	}
+	// get the token
+	token := headerParts[1]
+	if len(token) != 26 {
+		return nil, errors.New("authorization wrong size")
+	}
+
+	// get the user from the tokens table
+	user, err := app.DB.GetUserForToken(token)
+	if err != nil {
+		return nil, errors.New("no matching user found")
+	}
+
+	return user, nil
 }
