@@ -26,5 +26,11 @@ func (app *application) routes() http.Handler {
 	mux.Post("/api/authenticate", app.CreateAuthToken)
 	mux.Post("/api/is-authenticated", app.CheckAuthentication)
 
+	// create a new mux and apply middleware to it, group certain routes logically into one location
+	mux.Route("/api/admin", func(mux chi.Router) {
+		mux.Use(app.Auth)
+
+		mux.Post("/virtual-terminal-succeeded", app.VirtualTerminalSucceeded)
+	})
 	return mux
 }
