@@ -413,3 +413,36 @@ func (app *application) VirtualTerminalSucceeded(w http.ResponseWriter, r *http.
 	app.writeJSON(w, http.StatusOK, txn)
 
 }
+func (app *application) SendPasswordResetEmail(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		Email string `json:"email"`
+	}
+
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	var data struct {
+		Link string // Link to send an email with url to the password request
+	}
+	// send a link to the front end that will show a form that people to choose a new password
+	data.Link = "http://www.reset.com"
+
+	// send mail
+	err = app.SendMail("info@widget.com", "info@widget.com", "password reset request", "password-reset", data)
+	if err != nil {
+		app.errorLog.Println(err)
+		app.badRequest(w, r, err)
+	}
+
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	resp.Error = false
+
+	app.writeJSON(w, http.StatusCreated, resp)
+}
