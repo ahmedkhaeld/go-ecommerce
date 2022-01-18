@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/cards"
+	"github.com/ahmedkhaeld/ecommerce/internal/encryption"
 	"github.com/ahmedkhaeld/ecommerce/internal/models"
 	"github.com/ahmedkhaeld/ecommerce/internal/urlsigner"
 	"github.com/go-chi/chi/v5"
@@ -479,7 +480,17 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		app.badRequest(w, r, err)
 		return
 	}
-	user, err := app.DB.GetUserByEmail(payload.Email)
+
+	encrypter := encryption.Encryption{
+		Key: []byte(app.config.secretkey),
+	}
+
+	plainEmail, err := encrypter.Decrypt(payload.Email)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+	user, err := app.DB.GetUserByEmail(plainEmail)
 	if err != nil {
 		app.badRequest(w, r, err)
 		return

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/cards"
+	"github.com/ahmedkhaeld/ecommerce/internal/encryption"
 	"github.com/ahmedkhaeld/ecommerce/internal/models"
 	"github.com/ahmedkhaeld/ecommerce/internal/urlsigner"
 	"github.com/go-chi/chi/v5"
@@ -356,6 +357,7 @@ func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (app *application) ShowResetPassword(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
 	// validate the url, make sure that url is signed
 	theURL := r.RequestURI
 	testURL := fmt.Sprintf("%s%s", app.config.frontend, theURL)
@@ -374,8 +376,18 @@ func (app *application) ShowResetPassword(w http.ResponseWriter, r *http.Request
 		app.errorLog.Println("Link expired")
 		return
 	}
+
+	encrypter := encryption.Encryption{
+		Key: []byte(app.config.secretkey),
+	}
+	encryptedEmail, err := encrypter.Encrypt(email)
+	if err != nil {
+		app.errorLog.Println("Encryption failed")
+		return
+	}
+
 	data := make(map[string]interface{})
-	data["email"] = r.URL.Query().Get("email")
+	data["email"] = encryptedEmail
 
 	if err := app.renderTemplate(w, r, "reset-password", &templateData{
 		Data: data,
