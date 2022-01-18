@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ahmedkhaeld/ecommerce/internal/cards"
 	"github.com/ahmedkhaeld/ecommerce/internal/models"
+	"github.com/ahmedkhaeld/ecommerce/internal/urlsigner"
 	"github.com/go-chi/chi/v5"
 	"github.com/stripe/stripe-go/v72"
 	"net/http"
@@ -423,12 +424,32 @@ func (app *application) SendPasswordResetEmail(w http.ResponseWriter, r *http.Re
 		app.badRequest(w, r, err)
 		return
 	}
+	// verify the email exist in the database
+	_, err = app.DB.GetUserByEmail(payload.Email)
+	if err != nil {
+		var resp struct {
+			Error   bool   `json:"error"`
+			Message string `json:"message"`
+		}
+		resp.Error = true
+		resp.Message = "No matching email found in the database"
+		app.writeJSON(w, http.StatusAccepted, resp)
+		return
+	}
+
+	//  the url to be signed; http://localhost:4000/reset-password?email=typedemail
+	link := fmt.Sprintf("%s/reset-password?email=%s", app.config.frontend, payload.Email)
+	// use urlSinger to sign the url
+	sign := urlsigner.Signer{
+		Secret: []byte(app.config.secretkey),
+	}
+	signedLink := sign.GenerateTokenFromString(link)
 
 	var data struct {
 		Link string // Link to send an email with url to the password request
 	}
 	// send a link to the front end that will show a form that people to choose a new password
-	data.Link = "http://www.reset.com"
+	data.Link = signedLink
 
 	// send mail
 	err = app.SendMail("info@widget.com", "info@widget.com", "password reset request", "password-reset", data)
