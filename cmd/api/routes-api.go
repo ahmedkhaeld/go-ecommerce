@@ -33,6 +33,8 @@ func (app *application) routes() http.Handler {
 		mux.Use(app.Auth)
 
 		mux.Post("/virtual-terminal-succeeded", app.VirtualTerminalSucceeded)
+		mux.Post("/all-sales", app.AllSales)
+		mux.Post("/all-subscriptions", app.AllSubscriptions)
 	})
 	return mux
 }
