@@ -164,3 +164,20 @@ func (c *Card) Refund(pi string, amount int) error {
 	}
 	return nil
 }
+
+func (c *Card) CancelSubscription(subID string) error {
+	// set the secret key of stripe
+	stripe.Key = c.Secret
+
+	// set the cancellation params
+	params := &stripe.SubscriptionParams{
+		CancelAtPeriodEnd: stripe.Bool(true),
+		// as soon as the user's current period end cancel
+	}
+	_, err := sub.Update(subID, params)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
