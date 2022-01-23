@@ -207,6 +207,10 @@ func (app *application) ShowSale(w http.ResponseWriter, r *http.Request) {
 	stringMap := make(map[string]string)
 	stringMap["title"] = "Sale"
 	stringMap["cancel"] = "/admin/all-sales"
+	stringMap["url"] = "/api/admin/refund"
+	stringMap["btn"] = "Refund Order"
+	stringMap["badge"] = "Refunded"
+	stringMap["msg"] = "Charge refunded"
 	if err := app.renderTemplate(w, r, "sale", &templateData{
 		StringMap: stringMap,
 	}); err != nil {
@@ -217,6 +221,10 @@ func (app *application) ShowSubscription(w http.ResponseWriter, r *http.Request)
 	stringMap := make(map[string]string)
 	stringMap["title"] = "Subscription"
 	stringMap["cancel"] = "/admin/all-subscriptions"
+	stringMap["url"] = "/api/admin/cancel-subscription"
+	stringMap["btn"] = "Cancel Subscription"
+	stringMap["badge"] = "Cancelled"
+	stringMap["msg"] = "Subscription cancelled"
 	if err := app.renderTemplate(w, r, "sale", &templateData{
 		StringMap: stringMap,
 	}); err != nil {
