@@ -67,7 +67,10 @@
 
         document.addEventListener("DOMContentLoaded", function(){
             if (id !=="0") {
-                delBtn.classList.remove("d-none");
+                if( id !== "{{.UserID}}" ){
+                    delBtn.classList.remove("d-none");
+
+                }
                 const requestOptions = {
                     method: 'post',
                     headers : {
@@ -90,7 +93,7 @@
 
         })
 
-        document.addEventListener("click", function(){
+        delBtn.addEventListener("click", function(){
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to undo this!",
