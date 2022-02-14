@@ -94,6 +94,37 @@
 
     <script>
 
+        {{if eq .IsAuthenticated 1}}
+        let socket;
+        document.addEventListener("DOMContentLoaded", function() {
+            // create websocket connection
+             socket = new WebSocket("ws://localhost:4000/ws")
+
+            socket.onopen = () => {
+                console.log("Successfully connected to websockets");
+            }
+
+            socket.onclose = event => { };
+
+            socket.onerror = error => { };
+
+            // listen for messages, that's what passed from the server
+            socket.onmessage = msg => {
+                let data = JSON.parse(msg.data);
+
+                switch (data.action) {
+                    case "logout":
+                        if (data.user_id === {{.UserID}}) {
+                            logout();
+                        }
+                        break;
+                        default:
+                }
+            }
+        })
+
+        {{end}}
+
         // logout implementation; remove token items from the local storage then redirect
         function logout(){
             localStorage.removeItem("token");
