@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -115,17 +116,28 @@ func (app *application) GetWidgetByID(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter, r *http.Request) {
-	// 1. deal with the payload that passed to us
+// Invoice describes the JSON payload sent to the microservice
+type Invoice struct {
+	ID        int       `json:"id"`
+	WidgetID  int       `json:"widget_id"`
+	Amount    int       `json:"amount"`
+	Product   string    `json:"product"`
+	Quantity  int       `json:"quantity"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// CreateCustomerAndSubscribeToPlan is the handler for subscribing to the bronze plan
+func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 	var data stripePayload
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		app.errorLog.Println(err)
 		return
 	}
-	app.infoLog.Println(data.Email, data.LastFour, data.PaymentMethod, data.LastFour)
 
-	// card instance of Card, also has access to Card method
 	card := cards.Card{
 		Secret:   app.config.stripe.secret,
 		Key:      app.config.stripe.key,
@@ -136,7 +148,6 @@ func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter,
 	var subscription *stripe.Subscription
 	txnMsg := "Transaction successful"
 
-	// call the customer method
 	stripeCustomer, msg, err := card.CreateCustomer(data.PaymentMethod, data.Email)
 	if err != nil {
 		app.errorLog.Println(err)
@@ -149,13 +160,10 @@ func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter,
 		if err != nil {
 			app.errorLog.Println(err)
 			okay = false
-			txnMsg = msg
+			txnMsg = "Error subscribing customer"
 		}
-
-		app.infoLog.Println("subscription id is:", subscription.ID)
 	}
 
-	// if okay true then create and save customer, and create a new txn, last, create an order
 	if okay {
 		productID, _ := strconv.Atoi(data.ProductID)
 		customerID, err := app.SaveCustomer(data.FirstName, data.LastName, data.Email)
@@ -163,8 +171,7 @@ func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter,
 			app.errorLog.Println(err)
 			return
 		}
-
-		// create  a new transaction
+		// create a new txn
 		amount, _ := strconv.Atoi(data.Amount)
 
 		txn := models.Transaction{
@@ -177,11 +184,13 @@ func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter,
 			PaymentIntent:       subscription.ID,
 			PaymentMethod:       data.PaymentMethod,
 		}
+
 		txnID, err := app.SaveTransaction(txn)
 		if err != nil {
 			app.errorLog.Println(err)
 			return
 		}
+
 		// create order
 		order := models.Order{
 			WidgetID:      productID,
@@ -193,12 +202,28 @@ func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
 		}
-		_, err = app.SaveOrder(order)
+
+		orderID, err := app.SaveOrder(order)
 		if err != nil {
 			app.errorLog.Println(err)
 			return
 		}
 
+		inv := Invoice{
+			ID:        orderID,
+			Amount:    2000,
+			Product:   "Bronze Plan monthly subscription",
+			Quantity:  order.Quantity,
+			FirstName: data.FirstName,
+			LastName:  data.LastName,
+			Email:     data.Email,
+			CreatedAt: time.Now(),
+		}
+
+		err = app.callInvoiceMicro(inv)
+		if err != nil {
+			app.errorLog.Println(err)
+		}
 	}
 
 	resp := jsonResponse{
@@ -211,9 +236,33 @@ func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter,
 		app.errorLog.Println(err)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
+}
 
+// callInvoiceMicro calls the invoicing microservice
+func (app *application) callInvoiceMicro(inv Invoice) error {
+	url := "http://localhost:5000/invoice/create-and-send"
+	out, err := json.MarshalIndent(inv, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(out))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
 
 // SaveCustomer saves a customer and returns id
