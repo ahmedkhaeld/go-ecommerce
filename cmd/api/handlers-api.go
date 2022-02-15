@@ -9,6 +9,7 @@ import (
 	"github.com/ahmedkhaeld/ecommerce/internal/encryption"
 	"github.com/ahmedkhaeld/ecommerce/internal/models"
 	"github.com/ahmedkhaeld/ecommerce/internal/urlsigner"
+	"github.com/ahmedkhaeld/ecommerce/internal/validator"
 	"github.com/go-chi/chi/v5"
 	"github.com/stripe/stripe-go/v72"
 	"golang.org/x/crypto/bcrypt"
@@ -129,12 +130,20 @@ type Invoice struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// CreateCustomerAndSubscribeToPlan is the handler for subscribing to the bronze plan
-func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+// CreateCustomerAndSubscriptionPlan is the handler for subscribing to the bronze plan
+func (app *application) CreateCustomerAndSubscriptionPlan(w http.ResponseWriter, r *http.Request) {
 	var data stripePayload
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		app.errorLog.Println(err)
+		return
+	}
+	// validate data
+	v := validator.New()
+	v.Check(len(data.FirstName) > 1, "first_name", "Must be at least two characters")
+
+	if !v.Valid() {
+		app.failedValidation(w, r, v.Errors)
 		return
 	}
 
