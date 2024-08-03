@@ -1,56 +1,143 @@
-# go-ecommerce
-### features 
-* Build a front end in go 
-* Build a back-end api in go
-* Processing credit card transactions
-* Creating a plan subscubtions
-* Authentication on front and back ends
-* Session auth with username/password
-* Sateful tokens for API authentication
-* Password resets in case user forgot his password
-* User management ( Add, Edit, Delete)
-* Microservice, build a single microservice that generate an invoice pdf and email it to the user
----
-### Demo 
-* Home page 
-to display the products
-![Screenshot from 2022-02-16 00-27-24](https://user-images.githubusercontent.com/40498170/154845152-9fa8c689-e4de-4192-a498-6ec2e83a48fa.png)
+# 🛒 Go E-commerce
+Welcome to the Go E-commerce repository! This project demonstrates building a comprehensive e-commerce platform using Go
 
-* Buy single product and charge user credit card
-![Screenshot from 2022-02-16 00-28-11](https://user-images.githubusercontent.com/40498170/154845497-3b195eae-4199-43df-9ef8-318cebaf71fa.png)
-![Screenshot from 2022-02-16 00-29-18](https://user-images.githubusercontent.com/40498170/154845735-d66e4054-0536-473a-9a32-c6a686ebb6fe.png)
-* user receipt
-![Screenshot from 2022-02-16 00-39-40](https://user-images.githubusercontent.com/40498170/154845854-66625a68-c704-4364-9aad-bada276095cf.png)
-* Subscribe to a plan 
-![Screenshot from 2022-02-16 00-40-41](https://user-images.githubusercontent.com/40498170/154846108-af8f97f8-4263-4761-bf34-850eda0e5a8d.png)
-* Admin log in 
-![Screenshot from 2022-02-16 00-45-32](https://user-images.githubusercontent.com/40498170/154846176-b0fbafd5-713c-4729-af18-70291c844203.png)
-* Admin control panels
-![Screenshot from 2022-02-16 00-46-15](https://user-images.githubusercontent.com/40498170/154846210-0db7fead-9fa7-4551-9791-7d4420a50e8e.png)
-* Virtual Terminal incase admin need to charge a credit card on demand
-![Screenshot from 2022-02-16 00-46-22](https://user-images.githubusercontent.com/40498170/154846275-92d057f4-4580-4b79-b56c-4ba299df682f.png)
-* All Sale page
-![Screenshot from 2022-02-16 00-46-30](https://user-images.githubusercontent.com/40498170/154846329-0bc12baa-169b-472a-b915-de07423f64ba.png)
-* All Subscriptions page
-![Screenshot from 2022-02-16 00-46-38](https://user-images.githubusercontent.com/40498170/154846355-e5a084e8-7c1d-42b9-9b62-b6ff487be408.png)
-* view or Cancel a single subscription
-![Screenshot from 2022-02-16 00-46-43](https://user-images.githubusercontent.com/40498170/154846400-9f640e3a-175d-4411-8ee2-e38071c3ed5e.png)
-* All Admin Users page with an Add user option
-![Screenshot from 2022-02-16 00-46-58](https://user-images.githubusercontent.com/40498170/154846465-8da0b03c-2596-472f-8b89-13ce607b8e6b.png)
-* Register new admin user 
-![Screenshot from 2022-02-16 00-47-08](https://user-images.githubusercontent.com/40498170/154846513-f0f26a36-664f-4194-a2d9-f3ac52ebf2ff.png)
-* Update user 
-![Screenshot from 2022-02-16 00-47-18](https://user-images.githubusercontent.com/40498170/154846571-58d8abb2-4370-4d43-b3b0-a8fab9f5265a.png)
-* Forgot Password 
-![Screenshot from 2022-02-16 00-47-36](https://user-images.githubusercontent.com/40498170/154846621-34e612e9-7ec1-4d2a-aba6-dbd9d8cdf060.png)
-![Screenshot from 2022-02-16 00-47-52](https://user-images.githubusercontent.com/40498170/154846710-ce02c9c1-bde9-4ce4-8a16-fb0ac3979a21.png)
-* Forgot password request
-![Screenshot from 2022-02-16 00-48-12](https://user-images.githubusercontent.com/40498170/154847139-ccddc324-f2bb-4c20-a800-2aa1457c032b.png)
-* Reset password form
-![Screenshot from 2022-02-16 00-48-20](https://user-images.githubusercontent.com/40498170/154847190-debbe37c-cf95-4944-8849-3837e52969c6.png)
----
-### Database ER diagrams
-* Related tables
-![Screenshot from 2022-02-19 04-33-25](https://user-images.githubusercontent.com/40498170/154847243-0c3f0b70-39e6-4139-9180-45b49cff14a5.png)
-* Non Related tables
-![Screenshot from 2022-02-19 04-33-30](https://user-images.githubusercontent.com/40498170/154847272-c1fd31a7-76e5-44ff-a42e-f777f51f9a8f.png)
+## 📋 Table of Contents
+- Features
+- Demo
+- Database ER Diagrams
+
+## ✨ Features
+- Front-end and back-end built in Go
+- Processing credit card transactions
+- Creating plan subscriptions
+- Authentication on front and back ends
+- Session authentication with username/password
+- Stateful tokens for API authentication
+- Password resets for users
+- User management (Add, Edit, Delete)
+- Microservice for generating and emailing invoice PDFs
+
+##  🎥 Demo
+- Home page to display products
+- Buy a single product and charge user's credit card
+- User receipt
+- Subscribe to a plan
+- Admin login and control panels
+- Virtual terminal for admin to charge a credit card on demand
+- View all sales and subscriptions
+- Manage admin users, including adding new users and updating user information
+- Forgot password and reset password functionality
+
+## 🗄️ Database ER Diagrams
+
+```mermaid
+erDiagram
+    CUSTOMERS ||--o{ ORDERS : places
+    WIDGETS ||--o{ ORDERS : includes
+    ORDERS ||--|| TRANSACTIONS : has
+    ORDERS ||--|| STATUSES : has
+    TRANSACTIONS ||--|| TRANSACTION_STATUSES : has
+
+    CUSTOMERS {
+        int id
+        string first_name
+        string last_name
+        string email
+        datetime created_at
+        datetime updated_at
+    }
+
+    WIDGETS {
+        int id
+        string name
+        string description
+        int inventory_level
+        float price
+        datetime created_at
+        datetime updated_at
+        string image
+        bool is_recurring
+        int plan_id
+    }
+
+    ORDERS {
+        int id
+        int widget_id
+        int transaction_id
+        int status_id
+        int quantity
+        float amount
+        datetime created_at
+        datetime updated_at
+        int customer_id
+    }
+
+    TRANSACTIONS {
+        int id
+        float amount
+        string currency
+        string last_four
+        string bank_return_code
+        int transaction_status_id
+        datetime created_at
+        datetime updated_at
+        string expiry_month
+        string expiry_year
+        string payment_intent
+        string payment_method
+    }
+
+    STATUSES {
+        int id
+        string name
+        datetime created_at
+        datetime updated_at
+    }
+
+    TRANSACTION_STATUSES {
+        int id
+        string name
+        datetime created_at
+        datetime updated_at
+    }
+
+```
+
+
+> This schema supports a full e-commerce workflow, from customer management to order processing and payment handling. It allows for tracking the status of both orders and transactions separately, which is useful for handling complex scenarios like failed payments or order cancellations.
+
+
+####  Workflow implied by these relationships:
+
+**a) Customer Registration:**
+
+A new customer record is created in the customers table with their personal information.
+
+**b) Product Browsing:**
+
+Widgets (products) are stored in the widgets table with details like price, inventory level, and description.
+
+**c) Placing an Order:**
+
+When a customer decides to buy a widget, a new record is created in the orders table.
+This record includes references to the customer (customer_id), the widget (widget_id), and the quantity.
+An initial status is assigned to the order (status_id).
+
+**d) Payment Processing:**
+
+A new record is created in the transactions table when the customer attempts to pay.
+This includes payment details like amount, currency, and last four digits of the payment method.
+The transaction is given a status (transaction_status_id).
+
+**e) Order Fulfillment:**
+
+As the order progresses, its status in the orders table may be updated.
+The transaction status may also be updated as payment is processed.
+
+**f) Inventory Management:**
+
+The inventory_level in the widgets table would be updated after a successful order.
+
+**g) Recurring Orders:**
+
+The is_recurring field in the widgets table suggests that some products might be part of a subscription or recurring order system.
